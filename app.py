@@ -38,14 +38,19 @@ def get_images_from_directory(root_dir):
     alreadySeen = set(alreadySeen)  # Convert to set if it's not already a set
 
     image_files = [f for f in os.listdir(root_dir) if f not in alreadySeen and f.lower().endswith(('jpg', 'jpeg', 'png', 'bmp','webp'))]
-    #image_files_sorted = sorted(image_files, key=lambda f: os.path.getsize(os.path.join(root_dir, f)), )[:1000]
-    print('files sorted')
-    imgs_lookup = {}
+    image_files = list(map(lambda x:[x,os.path.getsize(os.path.join(root_dir, x)),os.stat(os.path.join(root_dir, x)).st_ctime],image_files))
 
-    for img in image_files:
+    sortNum=1
+    if sortKey == 'ctime':
+        sortNum=2
+    image_files_sorted = sorted(image_files, key=lambda x:x[sortNum],reverse=sortOrder)
+    print('files sorted reverser',sortOrder)
+    imgs_lookup = {}
+    #os.path.getsize(os.path.join(root_dir, img))
+    for img,sz,ctime in image_files_sorted[:1000]:
         try:
             Img = Image.open(os.path.join(root_dir, img))
-            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':os.path.getsize(os.path.join(root_dir, img)),'w':Img.size[0],'h':Img.size[1]}
+            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime}
         except Exception as e:
             print(e)
             e=0
@@ -141,4 +146,4 @@ def move_image():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0')
