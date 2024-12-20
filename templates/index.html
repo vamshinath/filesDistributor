@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Full-Screen Image Layout with Flexbox */
+        #image-container {
+            display: flex;
+            flex-wrap: wrap;  /* Allow images to wrap onto the next line */
+            justify-content: center;  /* Center images horizontally */
+            align-items: flex-start;  /* Align images to the top */
+            height: auto;  /* Allow height to adjust based on images */
+            padding: 0;  /* Remove any padding around the container */
+        }
+
+        .image-wrapper {
+            position: relative;
+            width: 33.33%; /* 3 images per row */
+            height: auto;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .keep-btn {
+            position: absolute;
+            top: 10px;
+            left: 33%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 10;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 10;
+        }
+        .move-btn {
+            position: absolute;
+            top: 10px;
+            left: 68%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 10;
+        }
+        .info-btn {
+            position: absolute;
+            top: 10px;
+            left: 85%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .image-wrapper {
+                width: 50%; /* 2 images per row on medium screens */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .image-wrapper {
+                width: 100%; /* 1 image per row on small screens */
+            }
+        }
+
+        /* Pagination controls */
+        #pagination-controls {
+            margin-top: 20px;  /* Add space between images and pagination */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="text-center">Image Viewer</h1>
+    <!-- Input form to specify directory -->
+    <form id="directory-form">
+        <div class="mb-3">
+            <label for="directory_path" class="form-label">Enter Directory Path</label>
+            <input type="text" class="form-control" id="directory_path" name="directory_path" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Load Images</button>
+    </form>
+
+    <!-- Image container -->
+    <div id="image-container" class="mt-5">
+        <!-- Images will be loaded dynamically here -->
+    </div>
+
+    <!-- Pagination controls -->
+    <div id="pagination-controls" class="d-flex justify-content-between mt-3">
+        <button id="prev-page" class="btn btn-secondary" onclick="loadImages(currentPage - 1)">Previous</button>
+        <button id="next-page" class="btn btn-secondary" onclick="loadImages(currentPage + 1)">Next</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let currentPage = 1;
+    let totalImages = 0;
+
+    // Function to load images dynamically with pagination
+    function loadImages(page) {
+        const directory = $("input[name='directory_path']").val();  // Get directory path from input
+
+        // Prevent loading if directory path is empty
+        if (!directory) return;
+
+        $.ajax({
+            url: '/load_images',  // Flask route to fetch images
+            method: 'POST',
+            data: { directory_path: directory, page: page },  // Send directory path and page number
+            success: function(response) {
+                // If no images, do not proceed
+                if (response.images.length === 0) return;
+
+                // Update the current page and total images count
+                currentPage = response.page;
+                totalImages = response.total_images;
+
+                // Clear the current images before loading new ones
+                $('#image-container').empty();
+
+                // Append the images to the container
+                response.images.forEach(function(image) {
+                    $('#image-container').append(
+                        `<div class="image-wrapper">
+                            <img src="/static/images/${image[0]}?directory_path=${directory}" class="img-fluid" alt="${image[0]}">
+                            <button class="btn btn-success btn-sm keep-btn" onclick="keepImage('${image[0]}', '${directory}')">Keep</button>
+                            
+                            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteImage('${image[0]}', '${directory}')">${image[1]}</button>
+                            <button class="btn btn-warning btn-sm move-btn" onclick="moveImage('${image[0]}', '${directory}')">Move</button>
+                            <button class="btn btn-info btn-sm info-btn" >${image[2]}</button>
+                            
+                            </div>`
+                    );
+                });
+
+                // Update pagination buttons
+                updatePaginationButtons();
+            },
+            error: function() {
+                alert("Error loading images. Please try again.");
+            }
+        });
+    }
+
+    // Function to delete an image dynamically
+    function deleteImage(imageName, directory) {
+    console.log(imageName);
+        $.ajax({
+            url: '/delete_image',
+            method: 'POST',
+            data: { image_name: imageName, directory_path: directory },
+            success: function(response) {
+                if (response.success) {
+                    $(`img[alt='${imageName}']`).closest('.image-wrapper').remove();
+                } else {
+                    alert('Error deleting the image.');
+                }
+            },
+            error: function() {
+                alert("Error deleting image. Please try again.");
+            }
+        });
+
+    }
+    function moveImage(imageName, directory) {
+    console.log(imageName);
+        $.ajax({
+            url: '/move_image',
+            method: 'POST',
+            data: { image_name: imageName, directory_path: directory },
+            success: function(response) {
+                if (response.success) {
+                    $(`img[alt='${imageName}']`).closest('.image-wrapper').remove();
+                } else {
+                    alert('Error deleting the image.');
+                }
+            },
+            error: function() {
+                alert("Error deleting image. Please try again.");
+            }
+        });}
+
+        function keepImage(imageName, directory) {
+    console.log(imageName);
+    $(`img[alt='${imageName}']`).closest('.image-wrapper').remove();
+    }
+
+
+    // Function to update the pagination buttons
+    function updatePaginationButtons() {
+        console.log('page',currentPage)
+        // Disable previous button if we're on the first page
+        if (currentPage === 1) {
+            $('#prev-page').prop('disabled', false);
+        } else {
+            $('#prev-page').prop('disabled', false);
+        }
+
+        // Disable next button if there are no more images to load
+        if (currentPage * 18 >= totalImages) {
+            $('#next-page').prop('disabled', false);
+        } else {
+            $('#next-page').prop('disabled', false);
+        }
+    }
+
+    // Handle form submission to load images dynamically
+    $('#directory-form').submit(function(e) {
+        e.preventDefault();
+        loadImages(currentPage);  // Load images from the first page
+    });
+
+    // Initially load the images
+    loadImages(currentPage);
+</script>
+
+</body>
+</html>
