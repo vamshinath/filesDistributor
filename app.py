@@ -55,13 +55,14 @@ def get_images_from_directory(root_dir):
     for img,sz,ctime in image_files_sorted[:1000]:
         try:
             Img = Image.open(os.path.join(root_dir, img))
-            tmp = getScoreOnly(os.path.join(root_dir, img))
             nsfw_score1=-1
             skinPer=-10
-            if tmp:
-                nsfw_score1 = tmp['nsfw_score1']
-                skinPer = tmp['skinPer']
-                print(ctr)
+            if sortKey in ['nsfw_score1','skinPer']:
+                tmp = getScoreOnly(os.path.join(root_dir, img))
+                if tmp:
+                    nsfw_score1 = tmp['nsfw_score1']
+                    skinPer = tmp['skinPer']
+                    print(ctr)
             ctr+=1
             imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime,'nsfw_score1':nsfw_score1,'skinPer':skinPer}
         except Exception as e:
