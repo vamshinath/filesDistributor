@@ -1,7 +1,11 @@
-import os,shutil,humanize
+import os,shutil,humanize,sys
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from PIL import Image
 from datetime import datetime
+sys.path.insert(1, '/home/vamshi/')
+from getImageProps import getScoreOnly 
+
+
 app = Flask(__name__)
 IMAGES_PER_PAGE=45
 Image.MAX_IMAGE_PIXELS = None
@@ -47,10 +51,19 @@ def get_images_from_directory(root_dir):
     print('files sorted reverser',sortOrder)
     imgs_lookup = {}
     #os.path.getsize(os.path.join(root_dir, img))
+    ctr=1
     for img,sz,ctime in image_files_sorted[:1000]:
         try:
             Img = Image.open(os.path.join(root_dir, img))
-            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime}
+            tmp = getScoreOnly(os.path.join(root_dir, img))
+            nsfw_score1=-1
+            skinPer=-10
+            if tmp:
+                nsfw_score1 = tmp['nsfw_score1']
+                skinPer = tmp['skinPer']
+                print(ctr)
+            ctr+=1
+            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime,'nsfw_score1':nsfw_score1,'skinPer':skinPer}
         except Exception as e:
             print(e)
             e=0
@@ -60,7 +73,8 @@ def get_images_from_directory(root_dir):
     image_files=[]
     for img,vals in imgs_lookup:
         flsz = humanize.naturalsize(os.path.getsize(os.path.join(root_dir, img))).strip().replace('\n','')
-        image_files.append([img,str(vals['w'])+"x"+str(vals['h']),flsz])
+
+        image_files.append([img,str(vals['w'])+"x"+str(vals['h']),flsz,str(vals['nsfw_score1'])+'_'+str(vals['skinPer'])])
     
     
     return image_files
@@ -94,7 +108,7 @@ def load_images():
         #print('images',images_on_page)
         with open(directory+"/seen.txt",'a') as fl:
             if firstSeen:
-                fl.write(str(datetime.now)+"----------------------------------------------------------------\n")
+                fl.write(str(datetime.now())+"----------------------------------------------------------------\n")
             for im in images_on_page:
                 fl.write(im[0]+"\n")
         

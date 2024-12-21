@@ -92,6 +92,7 @@
 
 <div class="container mt-5">
     <h1 class="text-center">Image Viewer</h1>
+    <p>sort=skinPer&order=asc nsfw_score1 ctime flsz</p></br>
     <!-- Input form to specify directory -->
     <form id="directory-form">
         <div class="mb-3">
@@ -151,7 +152,7 @@
                             
                             <button class="btn btn-danger btn-sm delete-btn" onclick="deleteImage('${image[0]}', '${directory}')">${image[1]}</button>
                             <button class="btn btn-warning btn-sm move-btn" onclick="moveImage('${image[0]}', '${directory}')">Move</button>
-                            <button class="btn btn-info btn-sm info-btn" >${image[2]}</button>
+                            <button class="btn btn-info btn-sm info-btn" >${image[2]} ${image[3]}</button>
                             
                             </div>`
                     );

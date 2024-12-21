@@ -1,17 +1,22 @@
 import os
 import shutil
 import sys
+from datetime import datetime
+
+
+todayDateDir = 'all_'+str(datetime.today()).split()[0]
 
 def move_files_with_unique_names(src_dir):
     # Get the parent directory of the source directory
     parent_dir = os.path.dirname(src_dir)
-    dst_dir = os.path.join(parent_dir, 'all')  # 'all' will be created in the parent directory
+    dst_dir = os.path.join(parent_dir, todayDateDir)  # 'all' will be created in the parent directory
     
     # Ensure the 'all' directory exists
     os.makedirs(dst_dir, exist_ok=True)
-
+    exclude=[todayDateDir,]
     # Walk through the source directory
-    for root, dirs, files in os.walk(src_dir):
+    for root, dirs, files in os.walk(src_dir,topdown=True):
+        dirs[:] = [d for d in dirs if d not in exclude]
         for file in files:
             src_path = os.path.join(root, file)
             dst_path = os.path.join(dst_dir, file)
