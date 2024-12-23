@@ -85,13 +85,12 @@ def get_images_from_directory(root_dir):
                 try:
                     filehash = md5hasher.hash_file(os.path.join(root_dir, img))
                     exis=db['files'].find_one({'_id':filehash})
-                    if not exis:
+                    if exis == {} or exis == None:
                         score= getScore(os.path.join(root_dir, img))
-                        db['files'].insert_one({'_id':filehash,'score':score})
                     else:
                         score=exis['score']
-                    
                 except Exception as e:
+                    print(e)
                     score=-123
 
                     
