@@ -4,11 +4,20 @@ from PIL import Image
 from datetime import datetime
 sys.path.insert(1, '/home/vamshi/')
 from getImageProps import getScoreOnly 
+from getScore import getScore
+
+
+from filehash import FileHash
+from pymongo import MongoClient
+import copy
+mongoClient = MongoClient('mongodb://localhost:27017/')
+db = mongoClient["miniFilesLookup"]
+md5hasher = FileHash('sha256')
 
 
 app = Flask(__name__)
 IMAGES_PER_PAGE=45
-initialLoad=2000
+initialLoad=3000
 
 Image.MAX_IMAGE_PIXELS = None
 sortKey='dim'
@@ -27,7 +36,7 @@ def index():
 
 
     return render_template('index.html')
-
+    
 
 def get_images_from_directory(root_dir):
     # List of common image file extensions
@@ -55,10 +64,12 @@ def get_images_from_directory(root_dir):
     #os.path.getsize(os.path.join(root_dir, img))
     ctr=1
     for img,sz,ctime in image_files_sorted[:initialLoad]:
+        
         try:
             Img = Image.open(os.path.join(root_dir, img))
             nsfw_score1=-1
             skinPer=-10
+            score=-1
 
             if sortKey == 'skinPer':
                 tmp = getScoreOnly(os.path.join(root_dir, img),False,True)
@@ -69,19 +80,36 @@ def get_images_from_directory(root_dir):
                 tmp = getScoreOnly(os.path.join(root_dir, img),True,False)
                 if tmp:
                     nsfw_score1 = tmp['nsfw_score1']
+
+            if sortKey=='score':
+                try:
+                    filehash = md5hasher.hash_file(os.path.join(root_dir, img))
+                    exis=db['files'].find_one({'_id':filehash})
+                    if not exis:
+                        score= getScore(os.path.join(root_dir, img))
+                        db['files'].insert_one({'_id':filehash,'score':score})
+                    else:
+                        score=exis['score']
+                    
+                except Exception as e:
+                    score=-123
+
+                    
+                nsfw_score1=score
             print(ctr)
             ctr+=1
-            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime,'nsfw_score1':nsfw_score1,'skinPer':skinPer}
+            imgs_lookup[img] = {'dim':Img.size[0]*Img.size[1],'score':score,'flsz':sz,'w':Img.size[0],'h':Img.size[1],'ctime':ctime,'nsfw_score1':nsfw_score1,'skinPer':skinPer}
         except Exception as e:
             print(e)
             e=0
+        
 
     print(sortKey,'reverse:',sortOrder)
     imgs_lookup = sorted(imgs_lookup.items(),key=lambda x:x[1][sortKey],reverse=sortOrder)
     image_files=[]
     for img,vals in imgs_lookup:
         flsz = humanize.naturalsize(os.path.getsize(os.path.join(root_dir, img))).strip().replace('\n','')
-
+        print(img,vals['nsfw_score1'])
         image_files.append([img,str(vals['w'])+"x"+str(vals['h']),flsz,str(vals['nsfw_score1'])+'_'+str(vals['skinPer'])])
     
     
