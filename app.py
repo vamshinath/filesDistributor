@@ -2,7 +2,7 @@ import os,shutil,humanize,sys
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from PIL import Image
 from datetime import datetime
-sys.path.insert(1, '/home/vamshi/')
+sys.path.insert(1, '/home/vamshi/gitRepos/machineSetupRepoMain/')
 from getImageProps import getScoreOnly 
 from getScore import getScore
 
