@@ -10,8 +10,8 @@ from getScore import getScore
 from filehash import FileHash
 from pymongo import MongoClient
 import copy
-mongoClient = MongoClient('mongodb://localhost:27017/')
-db = mongoClient["miniFilesLookup"]
+mongoClientApp = MongoClient('mongodb://localhost:27017/')
+db = mongoClientApp["miniFilesLookup"]
 md5hasher = FileHash('sha256')
 
 
