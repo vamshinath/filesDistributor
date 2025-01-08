@@ -58,7 +58,10 @@ def get_images_from_directory(root_dir):
     sortNum=1
     if sortKey == 'ctime':
         sortNum=2
-    image_files_sorted = sorted(image_files, key=lambda x:x[sortNum],reverse=sortOrder)
+    if sortKey=='name':
+        image_files_sorted = sorted(image_files, key=lambda x:int(x[0].split('_')[0]),reverse=sortOrder)
+    else:
+        image_files_sorted = sorted(image_files, key=lambda x:x[sortNum],reverse=sortOrder)
     print('files sorted reverser',sortOrder)
     imgs_lookup = {}
     #os.path.getsize(os.path.join(root_dir, img))
@@ -104,7 +107,10 @@ def get_images_from_directory(root_dir):
         
 
     print(sortKey,'reverse:',sortOrder)
-    imgs_lookup = sorted(imgs_lookup.items(),key=lambda x:x[1][sortKey],reverse=sortOrder)
+    if sortKey=='name':
+        imgs_lookup = sorted(imgs_lookup.items(), key=lambda x:int(x[0].split('_')[0]),reverse=sortOrder)
+    else:
+        imgs_lookup = sorted(imgs_lookup.items(),key=lambda x:x[1][sortKey],reverse=sortOrder)
     image_files=[]
     for img,vals in imgs_lookup:
         flsz = humanize.naturalsize(os.path.getsize(os.path.join(root_dir, img))).strip().replace('\n','')
@@ -197,5 +203,6 @@ def move_image():
 if __name__ == '__main__':
     print('http://127.0.0.1:5000/?sort=flsz&order=desc')
     print('http://127.0.0.1:5000/?sort=nsfw_score1&order=desc')
+    print('http://127.0.0.1:5000/?sort=name&order=desc')
 
     app.run(host='0.0.0.0')
