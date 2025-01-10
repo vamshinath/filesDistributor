@@ -39,8 +39,6 @@ def index():
     
 
 def get_images_from_directory(root_dir):
-    # List of common image file extensions
-    image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp')
     
     alreadySeen = []
     try:
@@ -52,7 +50,7 @@ def get_images_from_directory(root_dir):
 
     alreadySeen = set(alreadySeen)  # Convert to set if it's not already a set
 
-    image_files = [f for f in os.listdir(root_dir) if f not in alreadySeen and f.lower().endswith(('jpg', 'jpeg', 'png', 'bmp','webp'))]
+    image_files = [f for f in os.listdir(root_dir) if f not in alreadySeen and f.lower().endswith(('jpg', 'jpeg', 'png', 'bmp','webp','gif'))]
     image_files = list(map(lambda x:[x,os.path.getsize(os.path.join(root_dir, x)),os.stat(os.path.join(root_dir, x)).st_ctime],image_files))
 
     sortNum=1
