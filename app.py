@@ -199,8 +199,8 @@ def move_image():
 
 
 if __name__ == '__main__':
-    print('http://127.0.0.1:5000/?sort=flsz&order=desc')
-    print('http://127.0.0.1:5000/?sort=nsfw_score1&order=desc')
-    print('http://127.0.0.1:5000/?sort=name&order=desc')
+    print('http://127.0.0.1:5001/?sort=flsz&order=desc')
+    print('http://127.0.0.1:5001/?sort=nsfw_score1&order=desc')
+    print('http://127.0.0.1:5001/?sort=name&order=desc')
 
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',port=5001)
