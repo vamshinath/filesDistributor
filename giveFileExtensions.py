@@ -84,8 +84,8 @@ def add_extensions_to_files(directory):
 
         # Sanitize the filename by removing query strings
         sanitized_filename = sanitize_filename(filename)
-        sanitized_file_path = os.path.join(directory, sanitized_filename)
         if sanitized_filename != filename:
+            sanitized_file_path = os.path.join(directory, generate_random_filename()+sanitized_filename)
             os.rename(file_path, sanitized_file_path)
             file_path = sanitized_file_path
             print(f"Sanitized: {filename} -> {sanitized_filename}")
